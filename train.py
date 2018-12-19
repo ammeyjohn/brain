@@ -8,25 +8,26 @@ from model import inference
 
 
 batch_size = 32
-num_classes = 4
+num_classes = 6
 
 
 # TF placeholder for graph input and output
 x = tf.placeholder(tf.float32, [None, 227, 227, 3])
-y = tf.placeholder(tf.float32, [None, num_classes])
+y = tf.placeholder(tf.int64, [None, ])
 keep_prob = tf.placeholder(tf.float32)
 
 pred = inference(x, y, keep_prob)
 
-learning_rate = 0.0001
+learning_rate = 0.001
 
 # 定义损失函数和优化器
 # 这里定义损失函数时调用tf.nn.softmax_cross_entropy_with_logits() 函数必须使用参数命名的方式来调用 (logits=pred, labels=y)不然会报错。
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=pred, labels=y)) 
+# cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=pred, labels=y)) 
+cost = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=y)) 
 train_op = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
 # 评估函数
-correct_pred = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
+correct_pred = tf.equal(tf.argmax(pred, 1), y)
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
 num_epochs = 10000

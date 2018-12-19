@@ -22,7 +22,7 @@ def max_pool(name, input, k, stride):
 def norm(name, input, size=4):
     return tf.nn.lrn(input, size, bias=1.0, alpha=0.001 / 9.0, beta=0.75, name=name)
 
-num_classes = 4
+num_classes = 6
 
 # 定义所有的网络参数
 weights = {

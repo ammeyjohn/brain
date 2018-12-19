@@ -75,9 +75,9 @@ import threading
 import numpy as np
 import tensorflow as tf
 
-tf.app.flags.DEFINE_string('train_directory', '/tmp/',
+tf.app.flags.DEFINE_string('train_directory', None,
                            'Training data directory')
-tf.app.flags.DEFINE_string('validation_directory', '/tmp/',
+tf.app.flags.DEFINE_string('validation_directory', None,
                            'Validation data directory')
 tf.app.flags.DEFINE_string('output_directory', '/tmp/',
                            'Output data directory')
@@ -425,10 +425,12 @@ def main(unused_argv):
   print('Saving results to %s' % FLAGS.output_directory)
 
   # Run it!
-  _process_dataset('validation', FLAGS.validation_directory,
-                   FLAGS.validation_shards, FLAGS.labels_file)
-  _process_dataset('train', FLAGS.train_directory,
-                   FLAGS.train_shards, FLAGS.labels_file)
+  if FLAGS.validation_directory is not None:
+    _process_dataset('validation', FLAGS.validation_directory,
+                    FLAGS.validation_shards, FLAGS.labels_file)
+  if FLAGS.train_directory is not None: 
+    _process_dataset('train', FLAGS.train_directory,
+                    FLAGS.train_shards, FLAGS.labels_file)
 
 
 if __name__ == '__main__':
