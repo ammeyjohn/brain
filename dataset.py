@@ -17,7 +17,7 @@ def _parse(example, image_shape):
     image = tf.cast(image, tf.float32)
 
     label = parsed_example['image/class/label']
-    # label = tf.one_hot(label, depth=4, on_value=1.0, off_value=0.0)
+    label = tf.one_hot(label, depth=5, on_value=1.0, off_value=0.0)
 
     return image, label
 

@@ -2,47 +2,44 @@ import numpy as np
 import tensorflow as tf
 
 
-def _print_activations(t):
-    print(t.op.name, ' ', t.get_shape().as_list())
+class Model():
 
-# 卷积层
-def conv2d(name, input, w, b, stride, padding='SAME'):
-    # 测试
-    x = tf.nn.conv2d(input, w, strides=[1, stride, stride, 1], padding=padding)
-    x = tf.nn.bias_add(x, b)
-    return tf.nn.relu(x, name=name)    
+    def __init__(self, num_classes):
+        self.num_classes = num_classes
 
+    def _print_activations(self, tensor):
+        '''Print tensor name and shape.'''
+        print(tensor.op.name, ' ', tensor.get_shape().as_list())
 
-# 最大下采样
-def max_pool(name, input, k, stride):
-    return tf.nn.max_pool(input, ksize=[1, k, k, 1], strides=[1, stride, stride, 1], padding='SAME', name=name)
+    def conv2d(self, input, w, b, stride, padding='SAME', name=None):
+        '''convolution layer'''
+        x = tf.nn.conv2d(input, w, strides=[1, stride, stride, 1], padding=padding)
+        x = tf.nn.bias_add(x, b)
+        return tf.nn.relu(x, name=name)    
 
-
-# 归一化操作 ToDo 正则方式待修改
-def norm(name, input, size=4):
-    return tf.nn.lrn(input, size, bias=1.0, alpha=0.001 / 9.0, beta=0.75, name=name)
-
-num_classes = 6
+    def max_pool(self, input, ksize, stride, padding='VALID', name=None):
+        '''Max pooling'''
+        return tf.nn.max_pool(input, ksize=[1, ksize, ksize, 1], strides=[1, stride, stride, 1], padding=padding, name=name)
 
 # 定义所有的网络参数
 weights = {
-    'wc1': tf.Variable(tf.random_normal([11, 11, 3, 96])),
-    'wc2': tf.Variable(tf.random_normal([5, 5, 96, 256])),
-    'wc3': tf.Variable(tf.random_normal([3, 3, 256, 384])),
-    'wc4': tf.Variable(tf.random_normal([3, 3, 384, 384])),
-    'wc5': tf.Variable(tf.random_normal([3, 3, 384, 256])),
-    'wd1': tf.Variable(tf.random_normal([4*4*256, 1024])),
-    'wd2': tf.Variable(tf.random_normal([1024, 512])),
-    'out': tf.Variable(tf.random_normal([512, num_classes]))
+    'wc1': tf.Variable(tf.random_normal([11, 11, 3, 48])),
+    'wc2': tf.Variable(tf.random_normal([5, 5, 48, 128])),
+    'wc3': tf.Variable(tf.random_normal([3, 3, 128, 192])),
+    'wc4': tf.Variable(tf.random_normal([3, 3, 192, 192])),
+    'wc5': tf.Variable(tf.random_normal([3, 3, 192, 128])),
+    'wd1': tf.Variable(tf.random_normal([3*3*128, 2048])),
+    'wd2': tf.Variable(tf.random_normal([2048, 2048])),
+    'out': tf.Variable(tf.random_normal([2048, num_classes]))
 }
 biases = {
-    'bc1': tf.Variable(tf.random_normal([96])),
-    'bc2': tf.Variable(tf.random_normal([256])),
-    'bc3': tf.Variable(tf.random_normal([384])),
-    'bc4': tf.Variable(tf.random_normal([384])),
-    'bc5': tf.Variable(tf.random_normal([256])),
-    'bd1': tf.Variable(tf.random_normal([1024])),
-    'bd2': tf.Variable(tf.random_normal([512])),
+    'bc1': tf.Variable(tf.random_normal([48])),
+    'bc2': tf.Variable(tf.random_normal([128])),
+    'bc3': tf.Variable(tf.random_normal([192])),
+    'bc4': tf.Variable(tf.random_normal([192])),
+    'bc5': tf.Variable(tf.random_normal([128])),
+    'bd1': tf.Variable(tf.random_normal([2048])),
+    'bd2': tf.Variable(tf.random_normal([2048])),
     'out': tf.Variable(tf.random_normal([num_classes]))
 }
 
