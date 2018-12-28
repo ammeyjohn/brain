@@ -365,6 +365,7 @@ def _find_image_files(data_dir, labels_file):
   print('Determining list of input files and labels from %s.' % data_dir)
   unique_labels = [l.strip() for l in tf.gfile.FastGFile(
       labels_file, 'r').readlines()]
+  print('Labels: ', dict(zip(range(1, len(unique_labels)+1),unique_labels)))
 
   labels = []
   filenames = []
