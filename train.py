@@ -31,7 +31,7 @@ FLAGS = tf.app.flags.FLAGS
 channels = 3
 # 0 for background images
 num_classes = FLAGS.num_classes + 1
-image_shape = [28, 28]
+image_shape = [100, 100]
 
 def main(_):  
 
