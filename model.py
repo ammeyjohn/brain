@@ -2,86 +2,71 @@ import numpy as np
 import tensorflow as tf
 
 
-def conv2d(x, W):
-  """conv2d returns a 2d convolution layer with full stride."""
-  return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
+class Model():
 
+    def __init__(self, num_classes):        
+        self.num_classes = num_classes
 
-def max_pool_2x2(x):
-  """max_pool_2x2 downsamples a feature map by 2X."""
-  return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
-                        strides=[1, 2, 2, 1], padding='SAME')
+    def conv(self, name, x, shape):
+        """build a full function conv2d layer."""
+        with tf.name_scope(name):
+            W = tf.Variable(tf.truncated_normal(shape, stddev=0.1))
+            b = tf.Variable(tf.constant(0.1, shape=shape[-1:]))
+            conv2d = tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
+            h_conv = tf.nn.relu(conv2d + b)
+            self.print_tensor(h_conv)
+            return h_conv, W, b
 
+    def fc(self, name, x, shape):
+        """build a full connection layer."""
+        with tf.name_scope(name):
+            W = tf.Variable(tf.truncated_normal(shape, stddev=0.1))
+            b = tf.Variable(tf.constant(0.1, shape=shape[-1:]))
+            h_fc = tf.nn.relu(tf.matmul(x, W) + b)
+            self.print_tensor(h_fc)
+            return h_fc, W, b
 
-def weight_variable(shape):
-  """weight_variable generates a weight variable of a given shape."""
-  initial = tf.truncated_normal(shape, stddev=0.1)
-  return tf.Variable(initial)
+    def dropout(self, name, x, keep_prob=None):
+        """return a dropout layer."""
+        with tf.name_scope(name):
+            if keep_prob is None:
+                keep_prob = tf.placeholder(tf.float32)
+            h_fc = tf.nn.dropout(x, keep_prob)
+            self.print_tensor(h_fc)
+            return h_fc, keep_prob
 
+    def conv2d(self, x, W):
+        """conv2d returns a 2d convolution layer with full stride."""
+        return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
 
-def bias_variable(shape):
-  """bias_variable generates a bias variable of a given shape."""
-  initial = tf.constant(0.1, shape=shape)
-  return tf.Variable(initial)
+    def max_pool_2x2(self, name, x):
+        """max_pool_2x2 downsamples a feature map by 2X."""
+        with tf.name_scope(name):
+            return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
+                                    strides=[1, 2, 2, 1], padding='SAME')    
 
-def print_tensor(tensor):
-  print(tensor.op.name, ' ', tensor.get_shape().as_list())
+    def weight_variable(self, shape):
+        """weight_variable generates a weight variable of a given shape."""
+        initial = tf.truncated_normal(shape, stddev=0.1)
+        return tf.Variable(initial)
 
-def deepnn(x, num_classes):
-  # First convolutional layer - maps one grayscale image to 32 feature maps.
-  with tf.name_scope('conv1'):
-    W_conv1 = weight_variable([7, 7, 3, 32])
-    b_conv1 = bias_variable([32])
-    h_conv1 = tf.nn.relu(conv2d(x, W_conv1) + b_conv1)
+    def bias_variable(self, shape):
+        """bias_variable generates a bias variable of a given shape."""
+        initial = tf.constant(0.1, shape=shape)
+        return tf.Variable(initial)
 
-  # Pooling layer - downsamples by 2X.
-  with tf.name_scope('pool1'):
-    h_pool1 = max_pool_2x2(h_conv1)
-    print_tensor(h_pool1)
+    def print_tensor(self, tensor):
+        """print tensor name and shape."""
+        print(tensor.op.name, '\t', tensor.get_shape().as_list())    
 
-  # Second convolutional layer -- maps 32 feature maps to 64.
-  with tf.name_scope('conv2'):
-    W_conv2 = weight_variable([5, 5, 32, 64])
-    b_conv2 = bias_variable([64])
-    h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
+    def get_shape(self):
+        raise NotImplementedError()
 
-  # Second pooling layer.
-  with tf.name_scope('pool2'):
-    h_pool2 = max_pool_2x2(h_conv2)
-    print_tensor(h_pool2)
+    def inference(self, x):
+        raise NotImplementedError()
 
-  # Third convolutional layer -- maps 32 feature maps to 64.
-  with tf.name_scope('conv3'):
-    W_conv3 = weight_variable([5, 5, 64, 128])
-    b_conv3 = bias_variable([128])
-    h_conv3 = tf.nn.relu(conv2d(h_pool2, W_conv3) + b_conv3)
+    def train(self, logits, labels, learning_rate=1e-4, name='train'):
+        raise NotImplementedError()
 
-  # Third pooling layer.
-  with tf.name_scope('pool3'):
-    h_pool3 = max_pool_2x2(h_conv3)
-    print_tensor(h_pool3)
-
-  # Fully connected layer 1 -- after 2 round of downsampling, our 28x28 image
-  # is down to 7x7x64 feature maps -- maps this to 1024 features.
-  with tf.name_scope('fc1'):
-    W_fc1 = weight_variable([13 * 13 * 128, 2048])
-    b_fc1 = bias_variable([2048])
-
-    h_pool3_flat = tf.reshape(h_pool3, [-1, 13 * 13 * 128])
-    h_fc1 = tf.nn.relu(tf.matmul(h_pool3_flat, W_fc1) + b_fc1)
-
-  # Dropout - controls the complexity of the model, prevents co-adaptation of
-  # features.
-  with tf.name_scope('dropout'):
-    keep_prob = tf.placeholder(tf.float32)
-    h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
-    print_tensor(h_fc1_drop)
-
-  # Map the 1024 features to 5 classes, one for each digit
-  with tf.name_scope('fc2'):
-    W_fc2 = weight_variable([2048, num_classes])
-    b_fc2 = bias_variable([num_classes])
-
-    y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
-    print_tensor(y_conv)
-  return y_conv, keep_prob
+    def validate(self, logits, labels, name='val'):
+        raise NotImplementedError()
