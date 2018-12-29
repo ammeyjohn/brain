@@ -6,14 +6,15 @@ class Model():
 
     def __init__(self, num_classes):        
         self.num_classes = num_classes
+        print(self.num_classes)
 
     def conv(self, name, x, shape):
         """build a full function conv2d layer."""
         with tf.name_scope(name):
             W = tf.Variable(tf.truncated_normal(shape, stddev=0.1))
             b = tf.Variable(tf.constant(0.1, shape=shape[-1:]))
-            conv2d = tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
-            h_conv = tf.nn.relu(conv2d + b)
+            h_conv = tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
+            h_conv = tf.nn.relu(h_conv + b)
             self.print_tensor(h_conv)
             return h_conv, W, b
 
@@ -42,8 +43,10 @@ class Model():
     def max_pool_2x2(self, name, x):
         """max_pool_2x2 downsamples a feature map by 2X."""
         with tf.name_scope(name):
-            return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
-                                    strides=[1, 2, 2, 1], padding='SAME')    
+            h_pool = tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
+                                       strides=[1, 2, 2, 1], padding='SAME')
+            self.print_tensor(h_pool)                       
+            return h_pool
 
     def weight_variable(self, shape):
         """weight_variable generates a weight variable of a given shape."""

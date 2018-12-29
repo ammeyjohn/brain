@@ -42,9 +42,10 @@ def main(_):
 
     # Build the graph for the deep net
     y_conv, keep_prob = model.inference(x)
+    # y_conv, keep_prob = deepnn(x)
 
     # Create train step
-    train_op, cross_entropy = model.train(y_conv, y_)
+    train_op, cross_entropy = model.train(y_conv, y_, learning_rate=FLAGS.learning_rate) 
 
     summary_op = tf.summary.merge_all()
 
@@ -65,11 +66,11 @@ def main(_):
 
         step0 = 0
         # Restore model checkpoint
-        ckpt = tf.train.get_checkpoint_state(FLAGS.model_dir)
-        if ckpt and ckpt.model_checkpoint_path:
-            saver.restore(sess, ckpt.model_checkpoint_path)
-            step0 = int(ckpt.model_checkpoint_path.split('-')[-1])
-            print('Restore model from', ckpt.model_checkpoint_path, ', Start step =', step0)
+        # ckpt = tf.train.get_checkpoint_state(FLAGS.model_dir)
+        # if ckpt and ckpt.model_checkpoint_path:
+        #     saver.restore(sess, ckpt.model_checkpoint_path)
+        #     step0 = int(ckpt.model_checkpoint_path.split('-')[-1])
+        #     print('Restore model from', ckpt.model_checkpoint_path, ', Start step =', step0)
 
         summary_writer = tf.summary.FileWriter(FLAGS.train_dir, sess.graph)
                 
@@ -79,12 +80,11 @@ def main(_):
                 batch_images, batch_labels = sess.run([train_images, train_labels])
             except tf.errors.OutOfRangeError:
                 sess.run(train_iter.initializer)
-                batch_images, batch_labels = sess.run([train_images, train_labels])
+                batch_images, batch_labels = sess.run([train_images, train_labels])                    
 
             start_time = time.time()
             _, loss = sess.run([train_op, cross_entropy], 
-                feed_dict={x: batch_images, y_: batch_labels, keep_prob: 0.5})                
-            print(loss)
+                feed_dict={x: batch_images, y_: batch_labels, keep_prob: 0.5})
             duration = time.time() - start_time
 
             if step % 10 == 0:
@@ -99,7 +99,7 @@ def main(_):
                     feed_dict={x: batch_images, y_: batch_labels, keep_prob: 1.0})
                 summary_writer.add_summary(summary_str, step)   
 
-            if step % 1000 == 0 or (step + 1) == FLAGS.max_steps:
+            if step % 1000 == 0 or (step - step0 + 1) == FLAGS.max_steps:
                 checkpoint_path = os.path.join(FLAGS.model_dir, model_name)
                 saver.save(sess, checkpoint_path, global_step=step)                             
 
