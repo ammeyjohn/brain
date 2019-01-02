@@ -32,7 +32,7 @@ class Model():
         with tf.name_scope(name):
             h_fc = tf.nn.dropout(x, keep_prob)
             self.print_tensor(h_fc)
-            return h_fc, keep_prob
+            return h_fc
 
     def conv2d(self, x, W):
         """conv2d returns a 2d convolution layer with full stride."""

@@ -19,6 +19,8 @@ tf.app.flags.DEFINE_string('model_dir', './model',
 tf.app.flags.DEFINE_string('train_dir', './tmp', 
                            'Directory for save train summary.')
 
+
+tf.app.flags.DEFINE_string('model_name', 'basic', 'Model name')
 tf.app.flags.DEFINE_integer('num_classes', None, 'Defines number of classes.')
 tf.app.flags.DEFINE_integer('max_steps', 100000, 'Defines max train step.')
 tf.app.flags.DEFINE_integer('batch_size', 32, 'Defines batch size.')
@@ -26,11 +28,16 @@ tf.app.flags.DEFINE_float('learning_rate', 1e-4, 'Defines learning rate')
 
 FLAGS = tf.app.flags.FLAGS
 
+dic_models = {
+    'basic': BasicModel,
+    'lenet': Lenet5
+}
+
 model_name = 'meters.ckpt'
 channels = 3
 # 0 for background images
 num_classes = FLAGS.num_classes + 1
-model = Lenet5(num_classes)
+model = dic_models[FLAGS.model_name](num_classes)
 image_shape = model.get_shape()
 
 def main(_):  
@@ -47,6 +54,9 @@ def main(_):
 
     # Create train step
     train_op, cross_entropy = model.train(y_conv, y_, learning_rate=FLAGS.learning_rate) 
+
+    # Validate
+    accuracy, _ = model.validate(y_conv, y_)
 
     summary_op = tf.summary.merge_all()
 
@@ -67,11 +77,11 @@ def main(_):
 
         step0 = 0
         # Restore model checkpoint
-        # ckpt = tf.train.get_checkpoint_state(FLAGS.model_dir)
-        # if ckpt and ckpt.model_checkpoint_path:
-        #     saver.restore(sess, ckpt.model_checkpoint_path)
-        #     step0 = int(ckpt.model_checkpoint_path.split('-')[-1])
-        #     print('Restore model from', ckpt.model_checkpoint_path, ', Start step =', step0)
+        ckpt = tf.train.get_checkpoint_state(FLAGS.model_dir)
+        if ckpt and ckpt.model_checkpoint_path:
+            saver.restore(sess, ckpt.model_checkpoint_path)
+            step0 = int(ckpt.model_checkpoint_path.split('-')[-1])
+            print('Restore model from', ckpt.model_checkpoint_path, ', Start step =', step0)
 
         summary_writer = tf.summary.FileWriter(FLAGS.train_dir, sess.graph)
                 
@@ -90,10 +100,10 @@ def main(_):
 
             if step % 10 == 0:
                 examples_per_sec = FLAGS.batch_size / float(duration)
-                loss = sess.run(cross_entropy, 
+                loss, acc = sess.run([cross_entropy, accuracy],
                     feed_dict={x: batch_images, y_: batch_labels, keep_prob: 1.0})  
-                format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f sec/batch)')
-                print(format_str % (datetime.now(), step, loss, examples_per_sec, duration))
+                format_str = ('%s: step %d, loss = %.2f, acc = %.2f (%.1f examples/sec; %.3f sec/batch)')
+                print(format_str % (datetime.now(), step, loss, acc, examples_per_sec, duration))
 
             if step % 100 == 0:
                 summary_str = sess.run(summary_op, 

@@ -8,6 +8,7 @@ class Lenet5(Model):
 
     def __init__(self, num_classes):
         super().__init__(num_classes)
+        print('Using model Lenet5.')
 
     def get_shape(self):
         return [32, 32]
