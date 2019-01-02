@@ -8,6 +8,7 @@ class BasicModel(Model):
 
     def __init__(self, num_classes):
         super().__init__(num_classes)
+        print('Using model Basic.')
 
     def get_shape(self):
         return [28, 28]
