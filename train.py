@@ -8,6 +8,7 @@ import tensorflow as tf
 from dataset import load_data
 from basic_model import BasicModel
 from lenet5 import Lenet5
+from alexnet import AlexNet
 
 
 tf.app.flags.DEFINE_string('data_dir', './datasets', 
@@ -30,7 +31,8 @@ FLAGS = tf.app.flags.FLAGS
 
 dic_models = {
     'basic': BasicModel,
-    'lenet': Lenet5
+    'lenet': Lenet5,
+    'alexnet': AlexNet
 }
 
 model_name = 'meters.ckpt'

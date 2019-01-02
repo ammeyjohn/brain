@@ -8,12 +8,12 @@ class Model():
         self.num_classes = num_classes
         print(self.num_classes)
 
-    def conv(self, name, x, shape, padding='SAME'):
+    def conv(self, name, x, shape, stride=1, padding='SAME'):
         """build a full function conv2d layer."""
         with tf.name_scope(name):
             W = tf.Variable(tf.truncated_normal(shape, stddev=0.1))
             b = tf.Variable(tf.constant(0.1, shape=shape[-1:]))
-            h_conv = tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding=padding)
+            h_conv = tf.nn.conv2d(x, W, strides=[1, stride, stride, 1], padding=padding)
             h_conv = tf.nn.relu(h_conv + b)
             self.print_tensor(h_conv)
             return h_conv, W, b
@@ -38,6 +38,14 @@ class Model():
         """conv2d returns a 2d convolution layer with full stride."""
         return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
 
+    def max_pool(self, name, x, ksize=2, stride=2, padding='SAME'):
+        """max_pool_2x2 downsamples a feature map by 2X."""
+        with tf.name_scope(name):
+            h_pool = tf.nn.max_pool(x, ksize=[1, ksize, ksize, 1],
+                                       strides=[1, stride, stride, 1], padding=padding)
+            self.print_tensor(h_pool)                       
+            return h_pool
+
     def max_pool_2x2(self, name, x, padding='SAME'):
         """max_pool_2x2 downsamples a feature map by 2X."""
         with tf.name_scope(name):
@@ -45,6 +53,11 @@ class Model():
                                        strides=[1, 2, 2, 1], padding=padding)
             self.print_tensor(h_pool)                       
             return h_pool
+
+    def norm(self, name, x, lsize):
+        """Create a local response normalization layer."""
+        with tf.name_scope(name):
+            return tf.nn.lrn(x, depth_radius=lsize)
 
     def weight_variable(self, shape):
         """weight_variable generates a weight variable of a given shape."""
