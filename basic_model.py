@@ -33,7 +33,8 @@ class BasicModel(Model):
         h_fc1, _, _ = self.fc('fc1', h_pool2_flat, [w*h*c, 1024])
 
         # # Dropout - controls the complexity of the model, prevents co-adaptation of features.
-        h_fc1_drop, keep_prob = self.dropout('dropout1', h_fc1)
+        keep_prob = tf.placeholder(tf.float32)
+        h_fc1_drop = self.dropout('dropout1', h_fc1, keep_prob)
 
         # Map the 1024 features to N classes, one for each digit
         with tf.name_scope('fc2'):
@@ -43,25 +44,4 @@ class BasicModel(Model):
             y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
 
         return y_conv, keep_prob   
-
-    def train(self, logits, labels, learning_rate=1e-4, name='train'):
-        with tf.name_scope(name):
-            with tf.name_scope('loss'):
-                cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits)
-            cross_entropy = tf.reduce_mean(cross_entropy)
-            tf.summary.scalar('loss', cross_entropy)
-
-            with tf.name_scope('adam_optimizer'):
-                train_step = tf.train.AdamOptimizer(learning_rate).minimize(cross_entropy)
-        
-        return train_step, cross_entropy
-
-    def validate(self, logits, labels, name='val'):
-        with tf.name_scope(name):
-            with tf.name_scope('accuracy'):
-                correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1))
-                correct_prediction = tf.cast(correct_prediction, tf.float32)
-                accuracy = tf.reduce_mean(correct_prediction)
-                tf.summary.scalar('accuracy', accuracy)        
-        return accuracy, correct_prediction
         

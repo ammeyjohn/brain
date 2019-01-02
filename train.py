@@ -7,6 +7,7 @@ import tensorflow as tf
 
 from dataset import load_data
 from basic_model import BasicModel
+from lenet5 import Lenet5
 
 
 tf.app.flags.DEFINE_string('data_dir', './datasets', 
@@ -29,7 +30,7 @@ model_name = 'meters.ckpt'
 channels = 3
 # 0 for background images
 num_classes = FLAGS.num_classes + 1
-model = BasicModel(num_classes)
+model = Lenet5(num_classes)
 image_shape = model.get_shape()
 
 def main(_):  

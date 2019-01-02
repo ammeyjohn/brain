@@ -8,12 +8,12 @@ class Model():
         self.num_classes = num_classes
         print(self.num_classes)
 
-    def conv(self, name, x, shape):
+    def conv(self, name, x, shape, padding='SAME'):
         """build a full function conv2d layer."""
         with tf.name_scope(name):
             W = tf.Variable(tf.truncated_normal(shape, stddev=0.1))
             b = tf.Variable(tf.constant(0.1, shape=shape[-1:]))
-            h_conv = tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
+            h_conv = tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding=padding)
             h_conv = tf.nn.relu(h_conv + b)
             self.print_tensor(h_conv)
             return h_conv, W, b
@@ -27,11 +27,9 @@ class Model():
             self.print_tensor(h_fc)
             return h_fc, W, b
 
-    def dropout(self, name, x, keep_prob=None):
+    def dropout(self, name, x, keep_prob):
         """return a dropout layer."""
         with tf.name_scope(name):
-            if keep_prob is None:
-                keep_prob = tf.placeholder(tf.float32)
             h_fc = tf.nn.dropout(x, keep_prob)
             self.print_tensor(h_fc)
             return h_fc, keep_prob
@@ -40,11 +38,11 @@ class Model():
         """conv2d returns a 2d convolution layer with full stride."""
         return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
 
-    def max_pool_2x2(self, name, x):
+    def max_pool_2x2(self, name, x, padding='SAME'):
         """max_pool_2x2 downsamples a feature map by 2X."""
         with tf.name_scope(name):
             h_pool = tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
-                                       strides=[1, 2, 2, 1], padding='SAME')
+                                       strides=[1, 2, 2, 1], padding=padding)
             self.print_tensor(h_pool)                       
             return h_pool
 
@@ -69,7 +67,22 @@ class Model():
         raise NotImplementedError()
 
     def train(self, logits, labels, learning_rate=1e-4, name='train'):
-        raise NotImplementedError()
+        with tf.name_scope(name):
+            with tf.name_scope('loss'):
+                cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits)
+            cross_entropy = tf.reduce_mean(cross_entropy)
+            tf.summary.scalar('loss', cross_entropy)
+
+            with tf.name_scope('adam_optimizer'):
+                train_step = tf.train.AdamOptimizer(learning_rate).minimize(cross_entropy)
+        
+        return train_step, cross_entropy
 
     def validate(self, logits, labels, name='val'):
-        raise NotImplementedError()
+        with tf.name_scope(name):
+            with tf.name_scope('accuracy'):
+                correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1))
+                correct_prediction = tf.cast(correct_prediction, tf.float32)
+                accuracy = tf.reduce_mean(correct_prediction)
+                tf.summary.scalar('accuracy', accuracy)        
+        return accuracy, correct_prediction
