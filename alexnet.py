@@ -17,29 +17,29 @@ class AlexNet(Model):
 
         # First convolutional layer
         # output=55*55*96
-        h_conv1, _, _ = self.conv('conv1', x, [11, 11, 3, 96], stride=4, padding='VALID')
+        h_conv1, _, _ = self.conv('conv1', x, [11, 11, 3, 96], stride=4, padding='VALID')        
+
+        # First normalize layer
+        h_norm1 = self.norm('norm1', h_conv1, lsize=5)
 
         # First pooling layer
         # output=27*27*96
-        h_pool1 = self.max_pool('pool1', h_conv1, ksize=3, stride=2, padding='VALID')
-
-        # First normalize layer
-        h_norm1 = self.norm('norm1', h_pool1, lsize=5)
+        h_pool1 = self.max_pool('pool1', h_norm1, ksize=3, stride=2, padding='VALID')
 
 
         # Second convolutional layer
         # output=27*27*256
-        h_conv2, _, _ = self.conv('conv2', h_norm1, [5, 5, 96, 256])
+        h_conv2, _, _ = self.conv('conv2', h_pool1, [5, 5, 96, 256])
+
+        # Second normalize layer
+        h_norm2 = self.norm('norm2', h_conv2, lsize=5)
 
         # Second pooling layer
         # output=13*13*256
-        h_pool2 = self.max_pool('pool2', h_conv2, ksize=3, stride=2, padding='VALID')
-
-        # Second normalize layer
-        h_norm2 = self.norm('norm2', h_pool2, lsize=5)
+        h_pool2 = self.max_pool('pool2', h_norm2, ksize=3, stride=2, padding='VALID')
 
         # output=13*13*256
-        h_conv3, _, _ = self.conv('conv3', h_norm2, [3, 3, 256, 384])
+        h_conv3, _, _ = self.conv('conv3', h_pool2, [3, 3, 256, 384])
 
         # output=13*13*256
         h_conv4, _, _ = self.conv('conv4', h_conv3, [3, 3, 384, 384])

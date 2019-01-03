@@ -81,6 +81,7 @@ class Model():
 
     def train(self, logits, labels, learning_rate=1e-4, name='train'):
         with tf.name_scope(name):
+
             with tf.name_scope('loss'):
                 cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits)
             cross_entropy = tf.reduce_mean(cross_entropy)
@@ -89,7 +90,7 @@ class Model():
             with tf.name_scope('adam_optimizer'):
                 train_step = tf.train.AdamOptimizer(learning_rate).minimize(cross_entropy)
         
-        return train_step, cross_entropy
+        return train_step, cross_entropy    
 
     def validate(self, logits, labels, name='val'):
         with tf.name_scope(name):
@@ -99,3 +100,10 @@ class Model():
                 accuracy = tf.reduce_mean(correct_prediction)
                 tf.summary.scalar('accuracy', accuracy)        
         return accuracy, correct_prediction
+
+    def lr_decay(self, init_learning_rate=0.1, global_step=0, decay_steps=100, decay_rate=0.1):
+        with tf.name_scope('lr_decay'):
+            learning_rate = tf.Variable(tf.constant(0))
+            exp_decay = tf.train.exponential_decay(learning_rate, global_step, decay_steps, decay_rate, staircase=True)
+            tf.summary.scalar('learning_rate', learning_rate)
+            return learning_rate, exp_decay

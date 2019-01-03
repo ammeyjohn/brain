@@ -60,7 +60,10 @@ def main(_):
     # y_conv, keep_prob = deepnn(x)
 
     # Create train step
-    train_op, cross_entropy = model.train(y_conv, y_, learning_rate=FLAGS.learning_rate) 
+    ## learning_rate decay
+    global_step = tf.Variable(tf.constant(0))
+    learning_rate = model.lr_decay(FLAGS.learning_rate, FLAGS.max_steps)
+    train_op, cross_entropy = model.train(y_conv, y_, learning_rate=learning_rate) 
 
     # Validate
     accuracy, _ = model.validate(y_conv, y_)
