@@ -1,6 +1,7 @@
 import sys, os
 import time
 from datetime import datetime
+from configparser import ConfigParser
 from math import ceil
 
 import tensorflow as tf
@@ -10,6 +11,8 @@ from basic_model import BasicModel
 from lenet5 import Lenet5
 from alexnet import AlexNet
 
+cf = ConfigParser()
+cf.read('train.conf')
 
 tf.app.flags.DEFINE_string('data_dir', './datasets', 
                            'Directory for storing train tfrecord files.')
@@ -22,7 +25,6 @@ tf.app.flags.DEFINE_string('train_dir', './tmp',
 
 
 tf.app.flags.DEFINE_string('model_name', 'basic', 'Model name')
-tf.app.flags.DEFINE_integer('num_classes', None, 'Defines number of classes.')
 tf.app.flags.DEFINE_integer('max_steps', 100000, 'Defines max train step.')
 tf.app.flags.DEFINE_integer('batch_size', 32, 'Defines batch size.')
 tf.app.flags.DEFINE_float('learning_rate', 1e-4, 'Defines learning rate')
@@ -34,11 +36,14 @@ dic_models = {
     'lenet': Lenet5,
     'alexnet': AlexNet
 }
+if FLAGS.model_name not in dic_models:
+    print('Model name', FLAGS.model_name, 'is invalid.')
+    sys.exit()
 
 model_name = 'meters.ckpt'
 channels = 3
 # 0 for background images
-num_classes = FLAGS.num_classes + 1
+num_classes = int(cf.get('common', 'num_classes')) + 1
 model = dic_models[FLAGS.model_name](num_classes)
 image_shape = model.get_shape()
 
